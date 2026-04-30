@@ -1,0 +1,623 @@
+<script>
+  import { onMount, tick } from "svelte";
+  import { fetchKobo } from "./lib/api/kobo";
+  import {
+    collections,
+    createCollection,
+    addToCollection,
+    updateCollection,
+    updateItem,
+    removeFromCollection,
+    moveItem,
+  } from "./lib/stores/collections.js";
+
+  import ArchiveCard from "./lib/components/ArchiveCard.svelte";
+  import CollectionItem from "./lib/components/CollectionItem.svelte";
+  import MapView from "./lib/components/MapView.svelte";
+  import { demoCollection } from "./lib/utils/demoCollection";
+  import PrintA4 from "./lib/components/PrintA4.svelte";
+
+  let archive = [];
+  let newCollectionTitle = "";
+  let activeCollectionId = null;
+  let showPrint = false;
+  let printCollection = null;
+
+  $: allCollections = [demoCollection, ...$collections];
+
+  $: userCollections = $collections;
+
+  $: collection = activeCollectionId
+    ? allCollections.find((c) => c.id === activeCollectionId)
+    : null;
+
+  $: selectableCollections = $collections.filter((col) => {
+    if (!selectedItem) return true;
+
+    return !col.items.some((i) => i.id === selectedItem.id);
+  });
+
+  function goBack() {
+    activeCollectionId = null;
+  }
+
+  function handleCreate() {
+    if (!newCollectionTitle) return;
+
+    const id = createCollection(newCollectionTitle);
+
+    activeCollectionId = id;
+    newCollectionTitle = "";
+  }
+
+  let showPicker = false;
+  let selectedItem = null;
+  let newTitle = "";
+
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+
+  $: if (collection) {
+    tick().then(() => {
+      const els = document.querySelectorAll(".title-input, .description-input");
+      els.forEach(autoResize);
+    });
+  }
+
+  function openPicker(item) {
+    selectedItem = item;
+    showPicker = true;
+    newTitle = "";
+  }
+
+  function closePicker() {
+    showPicker = false;
+    selectedItem = null;
+    newTitle = "";
+  }
+
+  function handleSelectCollection(colId) {
+    addToCollection(colId, selectedItem);
+    closePicker();
+  }
+
+  function handleCreateAndAdd() {
+    if (!newTitle.trim()) return;
+
+    const id = createCollection(newTitle);
+    addToCollection(id, selectedItem);
+
+    closePicker();
+  }
+
+  $: collectionsContainingItem = selectedItem
+    ? $collections.filter((col) =>
+        col.items.some((i) => i.id === selectedItem.id),
+      )
+    : [];
+
+  $: if (!activeCollectionId && showPrint) {
+    showPrint = false;
+    printCollection = null;
+  }
+
+  onMount(async () => {
+    archive = await fetchKobo();
+  });
+
+  let currentPage = 1;
+  const pageSize = 25;
+
+  $: totalPages = Math.ceil(archive.length / pageSize);
+
+  $: paginatedArchive = archive.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  $: start = archive.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+
+  $: end = Math.min(currentPage * pageSize, archive.length);
+</script>
+
+<div class="layout">
+  <!-- MAIN -->
+  <section class="main">
+    {#if !activeCollectionId}
+      <!-- ARCHIVE VIEW -->
+      <h2>CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
+
+      <div class="presentation">
+        <p>
+          ¿Qué es la arquitectura de la cotidianidad y por qué utilizar esta
+          herramienta? Un texto breve de un máximo de 200 caracteres
+        </p>
+      </div>
+
+      <h1>HERRERÍAS</h1>
+
+      <p class="range">
+        {start}–{end} di {archive.length}
+      </p>
+
+      <div class="grid">
+        {#each paginatedArchive as item}
+          <ArchiveCard
+            {item}
+            on:add={(e) => openPicker(e.detail.item)}
+            on:openCollection={(e) => (activeCollectionId = e.detail.colId)}
+          />
+        {/each}
+      </div>
+      {#if showPicker}
+        <div class="overlay" on:click={closePicker}>
+          <div class="modal" on:click|stopPropagation>
+            <h3>Añadir a la colección</h3>
+
+            <!-- LISTA -->
+            <div class="list">
+              {#each selectableCollections as col}
+                <button
+                  class="collection-btn"
+                  disabled={col.isDemo}
+                  on:click={() => handleSelectCollection(col.id)}
+                >
+                  <span>{col.title}</span>
+                  <small>{col.items.length}</small>
+                </button>
+              {/each}
+            </div>
+
+            <!-- DIVIDER -->
+            <div class="divider">o crea una nueva colección</div>
+
+            <!-- CREATE -->
+            <div class="create">
+              <input
+                bind:value={newTitle}
+                placeholder="Nueva colección"
+                on:keydown={(e) => e.key === "Enter" && handleCreateAndAdd()}
+              />
+
+              <button class="create-btn" on:click={handleCreateAndAdd}>
+                + Crear y añadir
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
+      <div class="pages">
+        {#each Array(totalPages) as _, i}
+          <button
+            class:active={currentPage === i + 1}
+            on:click={() => (currentPage = i + 1)}
+          >
+            {i + 1}
+          </button>
+        {/each}
+      </div>
+    {:else if collection}
+      <!-- COLLECTION VIEW -->
+      <div class="collection-header">
+        <div
+          class=""
+          style="display: flex;flex-direction: column;padding: 0.1rem;"
+        >
+          <button class="volver" on:click={goBack}>← Volver al archivo</button>
+          <button
+            class="print-btn"
+            on:click={() => {
+              printCollection = collection;
+              showPrint = true;
+            }}
+          >
+            📄 Imprimir
+          </button>
+        </div>
+
+        <div class="collection-meta">
+          <textarea
+            class="title-input"
+            bind:value={collection.title}
+            rows="1"
+            on:input={(e) => {
+              autoResize(e.target);
+              updateCollection(activeCollectionId, {
+                title: e.target.value,
+              });
+            }}
+            on:focus={(e) => autoResize(e.target)}
+            placeholder="Título de la colección"
+          />
+
+          <textarea
+            class="description-input"
+            bind:value={collection.description}
+            rows="1"
+            on:input={(e) => {
+              autoResize(e.target);
+              updateCollection(activeCollectionId, {
+                description: e.target.value,
+              });
+            }}
+            on:focus={(e) => autoResize(e.target)}
+            placeholder="Descripción de la colección"
+          />
+        </div>
+      </div>
+
+      <div class="collection-layout">
+        <!-- ITEMS -->
+        <div class="collection-items">
+          {#each collection.items as item, i}
+            <CollectionItem
+              {item}
+              index={i}
+              collectionId={activeCollectionId}
+              readonly={collection.isDemo}
+            />
+          {/each}
+        </div>
+
+        <!-- MAP -->
+        <div class="collection-map">
+          <MapView archive={collection.items} />
+        </div>
+      </div>
+    {:else}
+      <!-- SAFETY STATE -->
+      <p>Caricamento collezione...</p>
+    {/if}
+  </section>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 style="font-style: italic !important;">Colecciones</h2>
+
+    <!-- <input bind:value={newCollectionTitle} placeholder="Nuova collezione" /> -->
+
+    <!-- <button on:click={handleCreate}>Crea</button> -->
+
+    <div class="collections">
+      {#each allCollections as col}
+        <div
+          class="collection {activeCollectionId === col.id
+            ? 'active'
+            : ''} {col.isDemo ? 'demo' : ''}"
+          on:click={() => (activeCollectionId = col.id)}
+        >
+          <strong>{col.title}</strong><br />
+
+          <small>{col.items.length} elementos</small>
+        </div>
+      {/each}
+    </div>
+  </aside>
+</div>
+
+{#if showPrint && printCollection}
+  <PrintA4
+    collection={printCollection}
+    onClose={() => {
+      showPrint = false;
+      printCollection = null;
+    }}
+  />
+{/if}
+
+<style>
+  textarea {
+    overflow: hidden;
+    resize: none; /* importantissimo */
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    height: 100vh;
+    font-family: system-ui;
+    overflow: hidden;
+  }
+
+  .main {
+    padding: 0.5rem 0.1rem;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: normal !important;
+    background: #fff;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .sidebar {
+    border-left: 1px solid var(--text);
+    padding: 1rem;
+    height: 100%;
+    overflow: auto;
+    background-color: #fff;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .collection-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .collection-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: calc(100vh - 140px);
+    min-height: 0;
+    gap: 1rem;
+  }
+
+  .collection-items,
+  .collection-map {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .collections {
+    margin-top: 1rem;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: normal !important;
+    line-height: 1;
+  }
+
+  .collection {
+    position: relative;
+    padding: 0.6rem;
+    border: 1px solid #eee;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+  .collection:hover {
+    border-style: dashed;
+    border-color: var(--text);
+  }
+
+  .collection.demo {
+    background: var(--text);
+    color: #f2f3f7;
+  }
+  .collection.demo:hover {
+    background: #f2f3f7;
+    color: var(--text);
+    border-color: var(--text);
+  }
+
+  .collection.active {
+    background: black;
+    color: white;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(1px);
+  }
+
+  .modal {
+    background: #f2f3f7;
+    padding: 1.2rem;
+    border-radius: 6px;
+    width: 320px;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .presentation {
+    min-height: 20px;
+    font-size: 0.7rem;
+    font-weight: 200;
+    line-height: 1.05rem;
+    padding: 0.35rem;
+    background-color: var(--text);
+    color: #f2f3f7;
+  }
+
+  h3 {
+    margin-bottom: 0.8rem;
+  }
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0.15rem;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: normal !important;
+    color: var(--text);
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 1rem;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    color: var(--text);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .collection-btn {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border: 1px solid var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text);
+    background: #f2f3f7;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+  }
+
+  .collection-btn:hover {
+    background: #f5f5f5;
+  }
+
+  .collection-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .title-input {
+    font-size: 2.2rem;
+    line-height: 1;
+    font-weight: bold;
+    border: none;
+    width: 100%;
+    outline: none;
+    background: transparent;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    color: var(--text);
+  }
+
+  .volver {
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    color: #f2f3f7;
+    font-size: 0.65rem;
+    line-height: 0.85rem;
+    background-color: var(--text);
+    border-color: var(--text);
+    font-weight: 200;
+    margin: 0.1rem;
+  }
+
+  .description-input {
+    font-size: 0.8rem;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--text) !important;
+    background-color: #fff;
+    border: 1px solid var(--text);
+    border-radius: 6px;
+  }
+
+  .divider {
+    text-align: center;
+    margin: 0.8rem 0;
+    font-size: 0.8em;
+    color: var(--text);
+  }
+
+  .create {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .create input {
+    padding: 0.4rem;
+    border: 1px solid var(--text);
+    background-color: #eff0f5;
+    color: var(--text) !important;
+    border-radius: 6px;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    font-size: 0.75rem;
+  }
+
+  .create-btn {
+    background: var(--text);
+    color: #f2f3f7;
+    border-color: var(--text);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+  }
+
+  .print-btn {
+    position: relative;
+    z-index: 9999;
+    cursor: pointer;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    color: #f2f3f7;
+    font-size: 0.65rem;
+    line-height: 0.85rem;
+    background-color: var(--text);
+    border-color: var(--text);
+    font-weight: 200;
+    margin: 0.1rem;
+  }
+
+  .range {
+    font-size: 0.75rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .pages {
+    /* display: flex; */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+  .pages button {
+    all: unset;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    color: #888;
+    transition: color 0.2s ease;
+  }
+  .pages button:hover {
+    color: black;
+  }
+  .pages button.active {
+    color: var(--text);
+    font-weight: 600;
+    position: relative;
+  }
+  .pages button.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 1px;
+    background: var(--text);
+  }
+</style>
