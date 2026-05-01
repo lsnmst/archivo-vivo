@@ -24,13 +24,14 @@ function getMedia(item) {
 
     const file = att[0];
 
-    let url = file.download_url;
+    if (!file.download_url) {
+        return { type: "none", url: null };
+    }
 
-    if (!url) return { type: "none", url: null };
-
-    // 🔥 PASSAGGIO CRITICO: proxy Vite
-    const parsed = new URL(url);
-    url = "/kobo" + parsed.pathname;
+    // 🔥 QUI IL FIX VERO
+    const url =
+        "https://archivo-vivo-kobo.musetta-alessandro.workers.dev/api/media?url=" +
+        encodeURIComponent(file.download_url);
 
     const mime = file.mimetype || "";
 

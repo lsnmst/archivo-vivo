@@ -1,7 +1,6 @@
 <script>
     import { onMount } from "svelte";
     import { createEventDispatcher } from "svelte";
-    import { loadImage } from "../utils/loadImage.js";
     import { addToCollection } from "../stores/collections.js";
     import { collections } from "../stores/collections.js";
 
@@ -9,8 +8,6 @@
     export let activeCollectionId;
 
     const dispatch = createEventDispatcher();
-
-    let img = null;
 
     function handleAdd() {
         dispatch("add", { item });
@@ -33,17 +30,6 @@
     $: usedInCollections = $collections.filter((col) =>
         col.items.some((i) => i.id === item.id),
     );
-
-    onMount(async () => {
-        if (item.media?.type === "image" && item.media?.url) {
-            try {
-                img = await loadImage(item.media.url);
-            } catch (e) {
-                console.log("image load failed", e);
-                img = null;
-            }
-        }
-    });
 </script>
 
 <div class="card" on:click={handleAdd}>
@@ -84,11 +70,7 @@
 
     <!-- MEDIA -->
     {#if item.media?.type === "image"}
-        {#if img}
-            <img src={img} alt={item.title} />
-        {:else}
-            <p>🖼 loading image...</p>
-        {/if}
+        <img src={item.media.url} alt={item.title} loading="lazy" />
     {:else if item.media?.type === "video"}
         <p>🎥 video</p>
     {:else if item.media?.type === "audio"}
