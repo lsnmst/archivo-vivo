@@ -1,18 +1,11 @@
+const KOBO_BASE = "https://eu.kobotoolbox.org";
+
 export function normalizeMediaUrl(url) {
     if (!url) return null;
 
-    try {
-        const parsed = new URL(url);
+    if (url.startsWith("http")) return url;
 
-        // Kobo → passa sempre dal proxy
-        if (parsed.hostname.includes("kobotoolbox")) {
-            return "/kobo" + parsed.pathname;
-        }
-
-        return url;
-    } catch {
-        return url;
-    }
+    return KOBO_BASE + url;
 }
 
 export function normalizeMediaType(type) {
