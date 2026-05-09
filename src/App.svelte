@@ -23,6 +23,9 @@
   let showPrint = false;
   let printCollection = null;
 
+  let showCollections = false;
+  let mobileTab = "list";
+
   $: allCollections = [demoCollection, ...$collections];
 
   $: userCollections = $collections;
@@ -248,9 +251,25 @@
         </div>
       </div>
 
+      <div class="mobile-tabs">
+        <button
+          class:active={mobileTab === "list"}
+          on:click={() => (mobileTab = "list")}
+        >
+          Ítems de la colección
+        </button>
+
+        <button
+          class:active={mobileTab === "map"}
+          on:click={() => (mobileTab = "map")}
+        >
+          Mapa
+        </button>
+      </div>
+
       <div class="collection-layout">
         <!-- ITEMS -->
-        <div class="collection-items">
+        <div class="collection-items" class:hidden-mobile={mobileTab === "map"}>
           {#each collection.items as item, i}
             <CollectionItem
               {item}
@@ -262,7 +281,7 @@
         </div>
 
         <!-- MAP -->
-        <div class="collection-map">
+        <div class="collection-map" class:hidden-mobile={mobileTab === "list"}>
           <MapView archive={collection.items} />
         </div>
       </div>
@@ -271,6 +290,30 @@
       <p>Caricamento collezione...</p>
     {/if}
   </section>
+
+  <div class:open={showCollections} class="bottom-sheet">
+    <button
+      class="sheet-handle"
+      on:click={() => (showCollections = !showCollections)}
+    >
+      ABRIR LAS COLECCIONES
+    </button>
+
+    <div class="sheet-content">
+      {#each allCollections as col}
+        <div
+          class="collection"
+          on:click={() => {
+            activeCollectionId = col.id;
+            showCollections = false;
+          }}
+        >
+          <strong>{col.title}</strong><br />
+          <small>{col.items.length} elementos</small>
+        </div>
+      {/each}
+    </div>
+  </div>
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -619,5 +662,107 @@
     width: 100%;
     height: 1px;
     background: var(--text);
+  }
+  .bottom-sheet {
+    display: none;
+  }
+  .collection-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .mobile-tabs {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .pages {
+      margin-bottom: 5rem;
+    }
+    .collection-layout {
+      margin-bottom: 5rem;
+    }
+    .collection-header {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0.4rem;
+    }
+    .grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+    }
+    .layout {
+      display: block;
+    }
+    .sidebar {
+      display: none;
+    }
+    .grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+    }
+    .bottom-sheet {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 58px;
+      background: var(--text);
+      border-top: 5px solid #eff0f5;
+      transition: height 0.25s ease;
+      z-index: 99999;
+      font-family: "Source Code Pro", monospace;
+    }
+    .bottom-sheet button {
+      color: #eff0f5;
+      font-weight: 600;
+    }
+    .bottom-sheet.open {
+      height: 70vh;
+    }
+    .sheet-handle {
+      width: 100%;
+      height: 58px;
+      border: none;
+      background: transparent;
+      font-family: "Source Code Pro", monospace;
+      color: var(--text);
+    }
+    .sheet-content {
+      overflow-y: auto;
+      height: calc(70vh - 58px);
+      padding: 0.5rem;
+      background: white;
+    }
+    .collection-layout {
+      display: block;
+      height: auto;
+    }
+    .mobile-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mobile-tabs button {
+      flex: 1;
+      border: 1px solid var(--text);
+      background: white;
+      padding: 0.5rem;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .mobile-tabs button.active {
+      background: var(--text);
+      color: white;
+    }
+    .hidden-mobile {
+      display: none;
+    }
+    .collection-map {
+      height: 70vh;
+    }
+    .collection-items {
+      overflow: visible;
+    }
   }
 </style>

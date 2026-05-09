@@ -1,6 +1,7 @@
 <script>
     import { onMount, onDestroy } from "svelte";
     import html2pdf from "html2pdf.js";
+    import html2canvas from "html2canvas";
     import PdfMap from "./PdfMap.svelte";
 
     export let collection;
@@ -37,13 +38,17 @@
     async function exportPDF() {
         const el = document.querySelector("#book");
 
-        await waitImages(); 
+        await waitImages();
+
+        await new Promise((r) => setTimeout(r, 1500)); // wait maps
 
         html2pdf()
             .set({
                 margin: 10,
                 filename: `${collection.title}.pdf`,
-                html2canvas: { scale: 2, useCORS: true },
+                image: { type: "jpeg", quality: 1 },
+                html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
             })
             .from(el)
             .save();
@@ -168,6 +173,7 @@
         border: none;
         border-radius: 4px;
         padding: 4px;
+        cursor: pointer;
     }
 
     .toolbar {

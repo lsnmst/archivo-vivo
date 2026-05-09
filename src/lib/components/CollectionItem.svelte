@@ -67,7 +67,7 @@
         bind:this={descEl}
         class="colldescr"
         value={item.customDescription ?? ""}
-        placeholder={koboDescription}
+        placeholder={koboDescription || "Añade una descripción"}
         on:input={(e) => {
             updateDescription(e);
             autoResize(e.target);

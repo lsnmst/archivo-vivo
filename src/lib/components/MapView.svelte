@@ -1,25 +1,20 @@
 <script>
-    import { onMount, tick } from "svelte";
-    import L from "leaflet";
-    import { collections } from "../stores/collections.js";
+    import { onMount } from "svelte";
+    import mapboxgl from "mapbox-gl";
+    import "mapbox-gl/dist/mapbox-gl.css";
 
     export let archive = [];
     export let activeCollectionId = null;
 
     let map;
     let mapContainer;
-    let layerGroup;
+    let markers = [];
 
     const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
     $: itemsToShow = activeCollectionId
-        ? ($collections.find((c) => c.id === activeCollectionId)?.items ?? [])
+        ? archive.filter((i) => i.collectionId === activeCollectionId)
         : archive;
-
-    $: itemsWithIndex = itemsToShow.map((item, i) => ({
-        ...item,
-        index: i + 1,
-    }));
 
     function getCoords(item) {
         if (!item?.location) return null;
@@ -28,65 +23,80 @@
         const lng = Number(item.location.lng);
 
         if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            return [lat, lng]; // Leaflet OK (lat, lng)
+            return [lng, lat]; // MAPBOX = [lng, lat]
         }
 
         return null;
     }
 
-    function render() {
-        if (!map || !layerGroup) return;
+    function clearMarkers() {
+        markers.forEach((m) => m.remove());
+        markers = [];
+    }
 
-        layerGroup.clearLayers();
+    function renderMarkers() {
+        if (!map) return;
 
-        const bounds = [];
+        clearMarkers();
+
+        const bounds = new mapboxgl.LngLatBounds();
 
         for (const [i, item] of itemsToShow.entries()) {
             const coords = getCoords(item);
+
             if (!coords) continue;
 
-            const icon = L.divIcon({
-                className: "custom-marker",
-                html: `<div class="marker">${i + 1}</div>`,
+            const el = document.createElement("div");
+
+            el.className = "custom-marker";
+            el.innerHTML = `<div class="marker">${i + 1}</div>`;
+
+            const popup = new mapboxgl.Popup({
+                offset: 20,
+            }).setHTML(`
+                <strong>${i + 1}.</strong>
+                ${item.title}
+            `);
+
+            const marker = new mapboxgl.Marker(el)
+                .setLngLat(coords)
+                .setPopup(popup)
+                .addTo(map);
+
+            markers.push(marker);
+
+            bounds.extend(coords);
+        }
+
+        if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, {
+                padding: 60,
+                maxZoom: 15,
             });
-
-            const marker = L.marker(coords, { icon }).bindPopup(
-                `${i + 1}. ${item.title}`,
-            );
-
-            marker.addTo(layerGroup);
-
-            bounds.push(coords);
         }
-
-        if (bounds.length) {
-            map.fitBounds(bounds, { padding: [40, 40] });
-        }
-
-        console.log("RENDER MARKERS:", bounds.length);
     }
 
-    onMount(async () => {
-        await tick();
+    onMount(() => {
+        mapboxgl.accessToken = MAPBOX_TOKEN;
 
-        map = L.map(mapContainer).setView([19.43, -99.13], 12);
+        map = new mapboxgl.Map({
+            container: mapContainer,
 
-        L.tileLayer(
-            `https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
-            {
-                tileSize: 512,
-                zoomOffset: -1,
-            },
-        ).addTo(map);
+            style: "mapbox://styles/comuni-dados/cmox5u8cn000w01s7dxs91dxi",
 
-        layerGroup = L.layerGroup().addTo(map);
+            center: [-99.13, 19.43],
+            zoom: 12,
+        });
 
-        await tick();
-        map.invalidateSize();
+        map.addControl(new mapboxgl.NavigationControl());
+
+        map.on("load", () => {
+            renderMarkers();
+        });
     });
 
     $: if (map && itemsToShow) {
-        render();
+        renderMarkers();
     }
 </script>
 
@@ -98,37 +108,40 @@
         height: 100%;
         min-height: 400px;
     }
+
+    :global(.custom-marker) {
+        cursor: pointer;
+    }
+
     :global(.custom-marker .marker) {
-        width: 16px;
-        height: 16px;
-        background: var(--text);
-        color: white;
+        width: 18px;
+        height: 18px;
+        background:white;
+        color: var(--text);
         border-radius: 20%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        border: 1px solid white;
-        font-family: "Source Code Pro", monospace !important;
-        font-optical-sizing: auto !important;
-        font-style: normal !important;
+        font-size: 13px;
+        font-weight: 900;
+        border: 5px solid var(--text);
+        font-family: "Source Code Pro", monospace;
     }
 
-    :global(.leaflet-popup-tip) {
-        display: none !important;
-    }
-
-    :global(.leaflet-popup-content-wrapper) {
+    :global(.mapboxgl-popup-content) {
         box-shadow: none;
         border: 1px solid var(--text);
         background-color: var(--text);
-        font-family: "Source Code Pro", monospace !important;
-        font-optical-sizing: auto !important;
-        font-style: normal !important;
-        color: #fff;
+        color: white;
+        font-family: "Source Code Pro", monospace;
+        font-size: 12px;
     }
 
-    :global(.leaflet-control-attribution) {
+    :global(.mapboxgl-popup-tip) {
         display: none;
+    }
+
+    :global(.mapboxgl-ctrl-logo) {
+        display: none !important;
     }
 </style>

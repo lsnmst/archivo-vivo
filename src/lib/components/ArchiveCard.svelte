@@ -169,4 +169,11 @@
         background-color: rgb(204, 79, 138);
         cursor: pointer;
     }
+
+    @media (max-width: 768px) {
+        .card img {
+            aspect-ratio: 4 / 5;
+            object-fit: cover;
+        }
+    }
 </style>
