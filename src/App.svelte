@@ -9,19 +9,24 @@
     updateItem,
     removeFromCollection,
     moveItem,
+    deleteCollection,
   } from "./lib/stores/collections.js";
 
   import ArchiveCard from "./lib/components/ArchiveCard.svelte";
   import CollectionItem from "./lib/components/CollectionItem.svelte";
   import MapView from "./lib/components/MapView.svelte";
+  import MapViewArchive from "./lib/components/MapViewArchive.svelte";
   import { demoCollection } from "./lib/utils/demoCollection";
   import PrintA4 from "./lib/components/PrintA4.svelte";
 
+  let mainEl;
   let archive = [];
+  let showArchiveMap = false;
   let newCollectionTitle = "";
   let activeCollectionId = null;
   let showPrint = false;
   let printCollection = null;
+  let fileInput;
 
   let showCollections = false;
   let mobileTab = "list";
@@ -95,6 +100,68 @@
     closePicker();
   }
 
+  function handleDeleteCollection(id) {
+    const ok = confirm("Eliminar esta colección?");
+
+    if (!ok) return;
+
+    deleteCollection(id);
+
+    if (activeCollectionId === id) {
+      activeCollectionId = null;
+    }
+  }
+
+  function exportCollection(collection) {
+    const data = JSON.stringify(collection, null, 2);
+
+    const blob = new Blob([data], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+      `${collection.title || "collection"}`.toLowerCase().replace(/\s+/g, "-") +
+      ".json";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImport(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+
+      const data = JSON.parse(text);
+
+      // sicurezza minima
+      if (!data.title || !Array.isArray(data.items)) {
+        throw new Error("Formato non valido");
+      }
+
+      collections.update((cols) => [
+        ...cols,
+        {
+          ...data,
+          id: crypto.randomUUID(),
+        },
+      ]);
+    } catch (err) {
+      alert("Archivo inválido");
+      console.error(err);
+    }
+  }
+
   $: collectionsContainingItem = selectedItem
     ? $collections.filter((col) =>
         col.items.some((i) => i.id === selectedItem.id),
@@ -125,9 +192,24 @@
   $: end = Math.min(currentPage * pageSize, archive.length);
 </script>
 
+{#if !activeCollectionId}
+  <button class="floating-map-btn" on:click={() => (showArchiveMap = true)}>
+    MAPA
+  </button>
+{/if}
+{#if showArchiveMap}
+  <div class="map-overlay">
+    <button class="close-map" on:click={() => (showArchiveMap = false)}>
+      ✕
+    </button>
+
+    <MapViewArchive {archive} />
+  </div>
+{/if}
+
 <div class="layout">
   <!-- MAIN -->
-  <section class="main">
+  <section class="main" bind:this={mainEl}>
     {#if !activeCollectionId}
       <!-- ARCHIVE VIEW -->
       <h2>CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
@@ -139,7 +221,7 @@
         </p>
       </div>
 
-      <h1>HERRERÍAS</h1>
+      <h2>CIUDAD DE MÉXICO</h2>
 
       <p class="range">
         {start}–{end} di {archive.length}
@@ -195,7 +277,16 @@
         {#each Array(totalPages) as _, i}
           <button
             class:active={currentPage === i + 1}
-            on:click={() => (currentPage = i + 1)}
+            on:click={async () => {
+              currentPage = i + 1;
+
+              await tick();
+
+              mainEl.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }}
           >
             {i + 1}
           </button>
@@ -217,6 +308,20 @@
             }}
           >
             📄 Imprimir
+          </button>
+          {#if !collection.isDemo}
+            <button
+              class="delete-btn"
+              on:click={() => handleDeleteCollection(collection.id)}
+            >
+              🗑 Eliminar
+            </button>
+          {/if}
+          <button
+            class="print-btn"
+            on:click={() => exportCollection(collection)}
+          >
+            ↓ Exportar
           </button>
         </div>
 
@@ -312,6 +417,13 @@
           <small>{col.items.length} elementos</small>
         </div>
       {/each}
+      <button
+        class="import-btn"
+        style="color: var(--text);"
+        on:click={() => fileInput.click()}
+      >
+        ↑ Importar colección
+      </button>
     </div>
   </div>
 
@@ -337,6 +449,18 @@
         </div>
       {/each}
     </div>
+
+    <button class="import-btn" on:click={() => fileInput.click()}>
+      ↑ Importar colección
+    </button>
+
+    <input
+      type="file"
+      accept=".json"
+      bind:this={fileInput}
+      style="display:none"
+      on:change={handleImport}
+    />
   </aside>
 </div>
 
@@ -443,6 +567,19 @@
   .collection.active {
     background: black;
     color: white;
+  }
+
+  .delete-btn {
+    cursor: pointer;
+    font-family: "Source Code Pro", monospace !important;
+    font-style: italic !important;
+    color: #f2f3f7;
+    font-size: 0.65rem;
+    line-height: 0.85rem;
+    background-color: var(--text);
+    border-color: var(--text);
+    font-weight: 200;
+    margin: 0.1rem;
   }
 
   .overlay {
@@ -607,6 +744,20 @@
     font-style: italic !important;
   }
 
+  .import-btn {
+    background: #fff;
+    color: var(--text);
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    text-decoration: underline;
+  }
+
   .print-btn {
     position: relative;
     z-index: 9999;
@@ -672,6 +823,48 @@
   }
   .mobile-tabs {
     display: none;
+  }
+  .floating-map-btn {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 9999;
+
+    border: 1px solid var(--text);
+    background: var(--text);
+    color: white;
+
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+
+    cursor: pointer;
+  }
+
+  .map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    background: black;
+  }
+
+  .close-map {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100000;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
   }
 
   @media (max-width: 768px) {

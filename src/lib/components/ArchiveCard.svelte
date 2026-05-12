@@ -84,9 +84,9 @@
     <!-- TEXT -->
     <div class="content">
         <div class="head">
-            <span class="date">{formatDate(item.date)}</span>
+            <span class="date"><i>{formatDate(item.date)}</i>, {item.title}</span>
         </div>
-        <h3>{item.title}</h3>
+        <!-- <h3>{item.title}</h3> -->
     </div>
     <!-- ACTION -->
     <!--     
@@ -132,6 +132,7 @@
         display: block;
         margin-top: 4px;
         font-size: 0.65rem;
+        line-height: 0.75rem;
     }
     .badges {
         display: flex;

@@ -247,3 +247,11 @@ export function moveItem(collectionId, fromIndex, toIndex) {
     })
   );
 }
+
+/* -----------------------------
+    REMOVE COLLECTION
+----------------------------- */
+
+export function deleteCollection(id) {
+  collections.update((cols) => cols.filter((c) => c.id !== id));
+}
