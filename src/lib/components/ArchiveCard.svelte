@@ -3,6 +3,8 @@
     import { createEventDispatcher } from "svelte";
     import { addToCollection } from "../stores/collections.js";
     import { collections } from "../stores/collections.js";
+    import { getCategory } from "../utils/categories";
+    import { categoryColors } from "../utils/categoryColor";
 
     export let item;
     export let activeCollectionId;
@@ -30,6 +32,10 @@
     $: usedInCollections = $collections.filter((col) =>
         col.items.some((i) => i.id === item.id),
     );
+
+    function getCategoryLabel(key) {
+        return categories?.[key]?.label || key;
+    }
 </script>
 
 <div class="card" on:click={handleAdd}>
@@ -68,6 +74,15 @@
         <button class="addColl" on:click={handleAdd}>+</button>
     </div>
 
+    <div
+        class="category"
+        style="border: 2px solid {categoryColors[item.category] ||
+            '#999'}; border-radius:5px; background-color:{categoryColors[item.category] ||
+            '#999'}"
+    >
+        {getCategory(item.category)?.label}
+    </div>
+
     <!-- MEDIA -->
     {#if item.media?.type === "image"}
         <img src={item.media.url} alt={item.title} loading="lazy" />
@@ -84,10 +99,13 @@
     <!-- TEXT -->
     <div class="content">
         <div class="head">
-            <span class="date"><i>{formatDate(item.date)}</i>, {item.title}</span>
+            <span class="date"
+                ><i>{formatDate(item.date)}</i>, {item.title}</span
+            >
         </div>
         <!-- <h3>{item.title}</h3> -->
     </div>
+
     <!-- ACTION -->
     <!--     
     <button
@@ -169,6 +187,17 @@
     .addColl:hover {
         background-color: rgb(204, 79, 138);
         cursor: pointer;
+    }
+
+    .category {
+        font-size: 0.62rem;
+        line-height: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-family: "Source Code Pro", monospace;
+        margin-top: 0.35rem;
+        margin-bottom: 0.35rem;
+        padding: 0.15rem;
     }
 
     @media (max-width: 768px) {

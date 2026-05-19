@@ -118,6 +118,20 @@ function parseMediaType(item) {
     return "other";
 }
 
+function normalizeCategory(v) {
+    if (!v) return null;
+
+    if (typeof v === "string") {
+        return v.split(",")[0].trim();
+    }
+
+    if (typeof v === "object") {
+        return v.name || v.value || v.label || null;
+    }
+
+    return null;
+}
+
 /**
  * PARSER FINALE
  */
@@ -137,6 +151,8 @@ export function parseItem(item) {
         date: parseDate(item),
 
         mediaType: parseMediaType(item),
+
+        category: normalizeCategory(item[F.category]),
 
     };
 }

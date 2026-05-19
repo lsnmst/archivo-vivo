@@ -12,5 +12,6 @@ export const F = {
     geoString: "Especifica_las_coord_o_archivo_multimedia",
     date: "Indica la fecha en que se creó el documento o el archivo multimedia (si es diferente de la fecha de subida)",
     mediaType: "Quiero añadir un documento o un archivo multimedia al archivo vivo",
+    category: "Clase",
 
 };

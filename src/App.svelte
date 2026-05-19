@@ -11,7 +11,8 @@
     moveItem,
     deleteCollection,
   } from "./lib/stores/collections.js";
-
+  import { categories } from "./lib/utils/categories.js";
+  import { categoryColors } from "./lib/utils/categoryColor";
   import ArchiveCard from "./lib/components/ArchiveCard.svelte";
   import CollectionItem from "./lib/components/CollectionItem.svelte";
   import MapView from "./lib/components/MapView.svelte";
@@ -22,6 +23,9 @@
   let mainEl;
   let archive = [];
   let showArchiveMap = false;
+
+  let activeCategory = null;
+
   let newCollectionTitle = "";
   let activeCollectionId = null;
   let showPrint = false;
@@ -44,6 +48,10 @@
 
     return !col.items.some((i) => i.id === selectedItem.id);
   });
+
+  $: filteredArchive = activeCategory
+    ? archive.filter((i) => i.category === activeCategory)
+    : archive;
 
   function goBack() {
     activeCollectionId = null;
@@ -180,16 +188,17 @@
   let currentPage = 1;
   const pageSize = 25;
 
-  $: totalPages = Math.ceil(archive.length / pageSize);
+  $: totalPages = Math.ceil(filteredArchive.length / pageSize);
 
-  $: paginatedArchive = archive.slice(
+  $: paginatedArchive = filteredArchive.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
 
-  $: start = archive.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  $: start =
+    filteredArchive.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
 
-  $: end = Math.min(currentPage * pageSize, archive.length);
+  $: end = Math.min(currentPage * pageSize, filteredArchive.length);
 </script>
 
 {#if !activeCollectionId}
@@ -203,7 +212,7 @@
       ✕
     </button>
 
-    <MapViewArchive {archive} />
+    <MapViewArchive archive={filteredArchive} />
   </div>
 {/if}
 
@@ -215,16 +224,59 @@
       <h2>CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
 
       <div class="presentation">
-        <p>
-          ¿Qué es la arquitectura de la cotidianidad y por qué utilizar esta
-          herramienta? Un texto breve de un máximo de 200 caracteres
+        <p
+          style="font-size:0.95em; padding: 1rem; line-height: 1.4em; font-weight: 300;"
+        >
+          Fotografiar lo cotidiano me abrió una ventana para mirar la ciudad de
+          otra manera. Aquello que pisamos o vemos a diario esconde una
+          historia, un autor y un contexto cultural, político y artístico.
+          Aunque la Ciudad de México es un monstruo caótico, al recorrer sus
+          colonias emergen detalles que le otorgan identidad y nos permiten leer
+          el paso del tiempo. Esta selección es una pequeña muestra de esos
+          gestos sencillos pero excepcionales que habitan las calles. Al estar
+          ligada a mis recorridos habituales, sé que cada imagen relata también
+          un fragmento de mi propia historia y mi forma de ver la vida. Este
+          mapa interactivo nace para ayudarte a descubrir rincones invisibles,
+          inspirar nuevos proyectos, motivarte a caminar tu barrio o reconectar
+          con tus propias memorias. Esto es un "archivo vivo": un proyecto en
+          constante movimiento, porque los encuadres de esta urbe son infinitos
+          y jamás cabrán en un solo lugar.
         </p>
       </div>
 
-      <h2>CIUDAD DE MÉXICO</h2>
+      <div class="filters">
+        <button
+          class:active={activeCategory === null}
+          style={`
+    border-color: var(--text);
+    background-color: ${activeCategory === null ? "var(--text)" : "transparent"};
+    color: ${activeCategory === null ? "#fff" : "var(--text)"};
+  `}
+          on:click={() => (activeCategory = null)}
+        >
+          Todo
+        </button>
+
+        {#each Object.entries(categories) as [key, cat]}
+          <button
+            class:active={activeCategory === key}
+            style={`
+      border-color: ${categoryColors[key]};
+      background-color: ${
+        activeCategory === key ? categoryColors[key] : "transparent"
+      };
+    `}
+            on:click={() => (activeCategory = key)}
+          >
+            {cat.label}
+          </button>
+        {/each}
+      </div>
+
+      <!-- <h2>CIUDAD DE MÉXICO</h2> -->
 
       <p class="range">
-        {start}–{end} di {archive.length}
+        {start}–{end} de {filteredArchive.length}
       </p>
 
       <div class="grid">
@@ -829,18 +881,14 @@
     right: 1rem;
     bottom: 1rem;
     z-index: 9999;
-
     border: 1px solid var(--text);
     background: var(--text);
     color: white;
-
     padding: 0.7rem 1rem;
     border-radius: 999px;
-
     font-family: "Source Code Pro", monospace;
     font-size: 0.75rem;
     letter-spacing: 0.08em;
-
     cursor: pointer;
   }
 
@@ -865,6 +913,47 @@
     color: white;
     cursor: pointer;
     font-size: 1rem;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-family: "Source Code Pro", monospace;
+  }
+
+  .filters button {
+    font-size: 0.60rem;
+    line-height: 0.75rem;
+    letter-spacing: 0.08em !important;
+    font-weight: 200 900 !important;
+    font-optical-sizing: auto !important;
+    font-style: normal !important;
+    padding: 0.3rem 0.55rem;
+    border: 1px solid var(--text);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition:
+      background 0.15s ease,
+      transform 0.1s ease,
+      opacity 0.15s ease;
+    border-radius: 5px;
+  }
+
+  .filters button:hover {
+    transform: translateY(-1px);
+  }
+
+  .filters button.active {
+    color: var(--text);
+    opacity: 1;
+    font-weight: 200;
   }
 
   @media (max-width: 768px) {
