@@ -33,16 +33,16 @@ export function getCategoryColor(category) {
 }
 
 export const categoryColors = {
-    geometrias: "#b7c9ff",
-    tiempo: "#d6d1c4",
-    herrero: "#8fa0ff",
-    luz: "#efe4ff",
-    umbrales: "#d7c2b0",
-    letras: "#cbb6ff",
-    patina: "#b7b09c",
-    senales: "#f0bfd6",
-    metro: "#a9b8ff",
-    naturaleza: "#b8d8c0",
-    popular: "#ffd7ba",
-    nichos: "#e6ccff",
+    geometrias: "#aabaff",
+    tiempo: "#cfc5b3",
+    herrero: "#8797d6",
+    luz: "#ded2f2",
+    umbrales: "#c6a48f",
+    letras: "#b7a0d6",
+    patina: "#aaa58a",
+    senales: "#d9a8bc",
+    metro: "#91a9d9",
+    naturaleza: "#9fc4a8",
+    popular: "#e7b995",
+    nichos: "#c8addf",
 };

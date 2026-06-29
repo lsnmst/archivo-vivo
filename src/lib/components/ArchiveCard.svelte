@@ -185,7 +185,7 @@
         border-radius: 5px;
     }
     .addColl:hover {
-        background-color: rgb(204, 79, 138);
+        background-color: rgb(203, 68, 62);
         cursor: pointer;
     }
 
@@ -194,7 +194,7 @@
         line-height: 0.8rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        font-family: "Source Code Pro", monospace;
+        font-family: "alagard", monospace;
         margin-top: 0.35rem;
         margin-bottom: 0.35rem;
         padding: 0.15rem;

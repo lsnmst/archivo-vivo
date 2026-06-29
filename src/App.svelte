@@ -24,6 +24,9 @@
   let archive = [];
   let showArchiveMap = false;
 
+  let presentationCompact = false;
+  let lastScroll = 0;
+
   let activeCategory = null;
 
   let newCollectionTitle = "";
@@ -183,7 +186,21 @@
 
   onMount(async () => {
     archive = await fetchKobo();
+
+    mainEl.addEventListener("scroll", handleScroll);
+
+    return () => {
+      mainEl.removeEventListener("scroll", handleScroll);
+    };
   });
+
+  function handleScroll() {
+    if (mainEl.scrollTop > 80) {
+      presentationCompact = true;
+    } else {
+      presentationCompact = false;
+    }
+  }
 
   let currentPage = 1;
   const pageSize = 25;
@@ -223,7 +240,7 @@
       <!-- ARCHIVE VIEW -->
       <h2>CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
 
-      <div class="presentation">
+      <div class="presentation" class:compact={presentationCompact}>
         <p
           style="font-size:0.95em; padding: 1rem; line-height: 1.4em; font-weight: 300;"
         >
@@ -545,9 +562,14 @@
     font-family: "Source Code Pro", monospace !important;
     font-optical-sizing: auto !important;
     font-style: normal !important;
-    background: #fff;
+    background: #dadada;
     overflow-y: auto;
     height: 100%;
+  }
+
+  .main h2 {
+    font-family: "alagard", monospace !important;
+    color: rgb(203, 68, 62);
   }
 
   .sidebar {
@@ -555,7 +577,11 @@
     padding: 1rem;
     height: 100%;
     overflow: auto;
-    background-color: #fff;
+    background-color: #dadada;
+  }
+
+  .sidebar h2 {
+    font-family: "alagard", monospace !important;
   }
 
   .grid {
@@ -596,14 +622,18 @@
   .collection {
     position: relative;
     padding: 0.6rem;
-    border: 1px solid #eee;
+    border: 1px solid rgb(203, 68, 62);
     margin-bottom: 0.5rem;
     cursor: pointer;
     border-radius: 8px;
   }
+
+  .collection strong {
+    font-family: "alagard", monospace !important;
+  }
   .collection:hover {
     border-style: dashed;
-    border-color: var(--text);
+    border-color: rgb(203, 68, 62);
   }
 
   .collection.demo {
@@ -611,13 +641,13 @@
     color: #f2f3f7;
   }
   .collection.demo:hover {
-    background: #f2f3f7;
-    color: var(--text);
+    background: rgb(203, 68, 62);
+    color: #f2f3f7;
     border-color: var(--text);
   }
 
   .collection.active {
-    background: black;
+    background: rgb(203, 68, 62);
     color: white;
   }
 
@@ -662,6 +692,23 @@
     padding: 0.35rem;
     background-color: var(--text);
     color: #f2f3f7;
+
+    transition:
+      max-height 0.35s ease,
+      opacity 0.35s ease,
+      padding 0.35s ease,
+      margin 0.35s ease;
+
+    max-height: 400px;
+    overflow: hidden;
+  }
+
+  .presentation.compact {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
   }
 
   h3 {
@@ -729,7 +776,7 @@
     width: 100%;
     outline: none;
     background: transparent;
-    font-family: "Source Code Pro", monospace !important;
+    font-family: "alagard", monospace !important;
     font-optical-sizing: auto !important;
     font-style: italic !important;
     color: var(--text);
@@ -754,7 +801,7 @@
     outline: none;
     resize: none;
     color: var(--text) !important;
-    background-color: #fff;
+    background-color: #dadada;
     border: 1px solid var(--text);
     border-radius: 6px;
   }
@@ -797,7 +844,7 @@
   }
 
   .import-btn {
-    background: #fff;
+    background: #dadada;
     color: var(--text);
     border: none;
     padding: 0.5rem;
@@ -926,7 +973,7 @@
   }
 
   .filters button {
-    font-size: 0.60rem;
+    font-size: 0.65rem;
     line-height: 0.75rem;
     letter-spacing: 0.08em !important;
     font-weight: 200 900 !important;
@@ -935,7 +982,7 @@
     padding: 0.3rem 0.55rem;
     border: 1px solid var(--text);
     background: transparent;
-    color: var(--text);
+    color: rgb(203, 68, 62);
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -944,6 +991,7 @@
       transform 0.1s ease,
       opacity 0.15s ease;
     border-radius: 5px;
+    font-family: "alagard", monospace;
   }
 
   .filters button:hover {
@@ -953,7 +1001,6 @@
   .filters button.active {
     color: var(--text);
     opacity: 1;
-    font-weight: 200;
   }
 
   @media (max-width: 768px) {
@@ -1028,7 +1075,7 @@
     .mobile-tabs button {
       flex: 1;
       border: 1px solid var(--text);
-      background: white;
+      background: #dadada;
       padding: 0.5rem;
       font-family: inherit;
       color: var(--text);
