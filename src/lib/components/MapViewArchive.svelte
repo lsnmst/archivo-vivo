@@ -1,5 +1,7 @@
 <script>
     import { onMount } from "svelte";
+    import { categoryColors } from "../utils/categoryColor";
+    import { getCategory } from "../utils/categories";
     import mapboxgl from "mapbox-gl";
     import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -48,12 +50,28 @@
 
             const el = document.createElement("div");
 
+            const color = categoryColors[item.category] || "#999";
+
             el.className = "custom-marker";
-            el.innerHTML = `<div class="marker">•</div>`;
+            el.innerHTML = `
+                <div
+                class="marker"
+                style="
+                    background-color:${color};
+                "
+                >
+                •
+                </div>
+                `;
 
             const popup = new mapboxgl.Popup({
                 offset: 20,
             }).setHTML(`
+               <div class="category" style="
+                border-bottom: 8px ${color} solid;
+                ">
+                 ${getCategory(item.category)?.label}
+                </div>
              ${
                  item.media?.type === "image"
                      ? `<img src="${item.media.url}" class="popup-image" />`
@@ -118,17 +136,17 @@
     }
 
     :global(.custom-marker .marker) {
-        width: 18px;
-        height: 18px;
+        width: 12px;
+        height: 12px;
         background: white;
-        color: var(--text);
+        color: rgb(203, 68, 62);
         border-radius: 20%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 900;
-        border: 5px solid var(--text);
+        border: 1px solid rgb(203, 68, 62);
         font-family: "Source Code Pro", monospace;
     }
 
@@ -154,5 +172,16 @@
         aspect-ratio: 4 / 3;
         object-fit: cover;
         border-radius: 4px;
+    }
+
+    :global(.category) {
+        font-size: 0.62rem;
+        line-height: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-family: "alagard", monospace;
+        margin-top: 0.35rem;
+        margin-bottom: 0.35rem;
+        padding: 0.3rem;
     }
 </style>

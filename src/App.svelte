@@ -28,6 +28,7 @@
   let lastScroll = 0;
 
   let activeCategory = null;
+  let sortOrder = "newest";
 
   let newCollectionTitle = "";
   let activeCollectionId = null;
@@ -52,13 +53,22 @@
     return !col.items.some((i) => i.id === selectedItem.id);
   });
 
-  $: filteredArchive = activeCategory
+  $: categoryFilteredArchive = activeCategory
     ? archive.filter((i) => i.category === activeCategory)
     : archive;
+
+  $: filteredArchive = [...categoryFilteredArchive].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+  });
 
   function goBack() {
     activeCollectionId = null;
   }
+
+  $: activeCategoryData = activeCategory ? categories[activeCategory] : null;
 
   function handleCreate() {
     if (!newCollectionTitle) return;
@@ -203,7 +213,7 @@
   }
 
   let currentPage = 1;
-  const pageSize = 25;
+  const pageSize = 30;
 
   $: totalPages = Math.ceil(filteredArchive.length / pageSize);
 
@@ -217,6 +227,10 @@
 
   $: end = Math.min(currentPage * pageSize, filteredArchive.length);
 </script>
+
+<!-- 
+<svelte:body on:contextmenu|preventDefault on:dragstart|preventDefault />
+ -->
 
 {#if !activeCollectionId}
   <button class="floating-map-btn" on:click={() => (showArchiveMap = true)}>
@@ -290,6 +304,24 @@
         {/each}
       </div>
 
+      <!-- 
+        SORT NEWEST/OLDEST BUTTON
+            <div class="sort-controls">
+        <button
+          class:active={sortOrder === "newest"}
+          on:click={() => (sortOrder = "newest")}
+        >
+          Más recientes
+        </button>
+
+        <button
+          class:active={sortOrder === "oldest"}
+          on:click={() => (sortOrder = "oldest")}
+        >
+          Más antiguas
+        </button>
+      </div>
+      -->
       <!-- <h2>CIUDAD DE MÉXICO</h2> -->
 
       <p class="range">
@@ -463,6 +495,16 @@
       <!-- SAFETY STATE -->
       <p>Caricamento collezione...</p>
     {/if}
+    <div class="presentation" style="background-color: #dadada !important;">
+      <p
+        style="font-size:1em; padding: 1.1rem; line-height: 1.3em; font-weight: 500; color:var(--text); font-family: 'alagard'"
+      >
+        Cartografía de la Cotidianidad es un proyecto de Armando Maravilla.
+        Todas las fotografías son obras originales protegidas por derechos de
+        autor. Su reproducción, distribución, descarga o cualquier otro uso sin
+        autorización expresa del autor está prohibido.
+      </p>
+    </div>
   </section>
 
   <div class:open={showCollections} class="bottom-sheet">
@@ -498,6 +540,16 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
+    {#if activeCategoryData}
+      <div
+        class="category-info"
+        style={`background-color: ${categoryColors[activeCategory]}`}
+      >
+        <h3>{activeCategoryData.label}</h3>
+        <p>{activeCategoryData.description}</p>
+      </div>
+    {/if}
+
     <h2 style="font-style: italic !important;">Colecciones</h2>
 
     <!-- <input bind:value={newCollectionTitle} placeholder="Nuova collezione" /> -->
@@ -693,11 +745,12 @@
     background-color: var(--text);
     color: #f2f3f7;
 
+    opacity: 1;
+    transform: translateY(0);
     transition:
       max-height 0.35s ease,
-      opacity 0.35s ease,
-      padding 0.35s ease,
-      margin 0.35s ease;
+      opacity 0.25s ease,
+      transform 0.35s ease;
 
     max-height: 400px;
     overflow: hidden;
@@ -709,6 +762,7 @@
     padding-top: 0;
     padding-bottom: 0;
     margin: 0;
+    transform: translateY(-20px);
   }
 
   h3 {
@@ -895,6 +949,7 @@
     padding: 0.2rem 0.4rem;
     color: #888;
     transition: color 0.2s ease;
+    font-family: "alagard";
   }
   .pages button:hover {
     color: black;
@@ -1001,6 +1056,28 @@
   .filters button.active {
     color: var(--text);
     opacity: 1;
+  }
+
+  .category-info {
+    margin-bottom: 1.5rem;
+    padding: 0.8rem;
+  }
+
+  .category-info h3 {
+    margin: 0 0 0.35rem 0;
+    font-family: "alagard", monospace;
+    font-size: 1rem;
+    color: var(--text);
+  }
+
+  .category-info p {
+    margin: 0;
+    font-family: "Source Code Pro", monospace !important;
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.12;
+    color: var(--text);
+    opacity: 0.8;
   }
 
   @media (max-width: 768px) {

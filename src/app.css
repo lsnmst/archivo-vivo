@@ -6,9 +6,16 @@
   font-family: 'alagard';
   src: url('./assets/fonts/alagard.ttf') format('truetype');
 }
+
 @font-face {
   font-family: 'dogica';
   src: url('./assets/fonts/dogica.ttf') format('truetype');
+}
+
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 :root {

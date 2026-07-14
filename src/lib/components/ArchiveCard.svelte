@@ -77,15 +77,22 @@
     <div
         class="category"
         style="border: 2px solid {categoryColors[item.category] ||
-            '#999'}; border-radius:5px; background-color:{categoryColors[item.category] ||
-            '#999'}"
+            '#999'}; border-radius:5px; background-color:{categoryColors[
+            item.category
+        ] || '#999'}"
     >
         {getCategory(item.category)?.label}
     </div>
 
     <!-- MEDIA -->
     {#if item.media?.type === "image"}
-        <img src={item.media.url} alt={item.title} loading="lazy" />
+        <img
+            src={item.media.url}
+            alt={item.title}
+            loading="lazy"
+            draggable="false"
+            on:contextmenu|preventDefault
+        />
     {:else if item.media?.type === "video"}
         <p>🎥 video</p>
     {:else if item.media?.type === "audio"}
@@ -123,6 +130,12 @@
 </div>
 
 <style>
+    img {
+        -webkit-user-drag: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
     h3 {
         font-size: 0.8em;
         line-height: 1.05;

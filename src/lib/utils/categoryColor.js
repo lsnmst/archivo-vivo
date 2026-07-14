@@ -36,7 +36,7 @@ export const categoryColors = {
     geometrias: "#aabaff",
     tiempo: "#cfc5b3",
     herrero: "#8797d6",
-    luz: "#ded2f2",
+    luz: "#c4aee8",
     umbrales: "#c6a48f",
     letras: "#b7a0d6",
     patina: "#aaa58a",

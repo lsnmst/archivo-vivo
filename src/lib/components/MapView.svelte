@@ -48,7 +48,7 @@
 
             const el = document.createElement("div");
 
-            el.className = "custom-marker";
+            el.className = "custom-marker-view";
             el.innerHTML = `<div class="marker">${i + 1}</div>`;
 
             const popup = new mapboxgl.Popup({
@@ -109,22 +109,22 @@
         min-height: 400px;
     }
 
-    :global(.custom-marker) {
+    :global(.custom-marker-view) {
         cursor: pointer;
     }
 
-    :global(.custom-marker .marker) {
-        width: 18px;
-        height: 18px;
-        background:white;
-        color: var(--text);
+    :global(.custom-marker-view .marker) {
+        width: 28px;
+        height: 28px;
+        background:rgb(203, 68, 62);
+        color: #dadada;
         border-radius: 20%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 13px;
-        font-weight: 900;
-        border: 5px solid var(--text);
+        font-weight: 600;
+        border: 1px solid rgb(203, 68, 62);
         font-family: "Source Code Pro", monospace;
     }
 

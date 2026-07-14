@@ -12,5 +12,10 @@ export async function fetchKobo() {
   }
 
   const data = await res.json();
+
+  console.log("KOBO RESPONSE", data);
+  console.log("count", data.count);
+  console.log("results", data.results?.length);
+
   return data.results.map(parseItem);
 }

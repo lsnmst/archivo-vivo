@@ -50,7 +50,12 @@
     </div>
 
     {#if item.media?.type === "image"}
-        <img src={item.media.url} alt="" />
+        <img
+            src={item.media.url}
+            alt=""
+            draggable="false"
+            on:contextmenu|preventDefault
+        />
     {/if}
 
     <input
@@ -94,6 +99,13 @@
 </div>
 
 <style>
+    img {
+        -webkit-user-drag: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
+    
     .item {
         padding: 0.5rem;
         margin-bottom: 0.5rem;
@@ -166,7 +178,7 @@
         width: 22px;
         height: 22px;
         border-radius: 20%;
-        background: black;
+        background: rgb(203, 68, 62) !important;
         color: white;
         font-size: 12px;
         display: grid;
