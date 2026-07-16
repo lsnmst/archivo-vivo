@@ -48,7 +48,11 @@
                 filename: `${collection.title}.pdf`,
                 image: { type: "jpeg", quality: 1 },
                 html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+                jsPDF: {
+                    unit: "mm",
+                    format: "a0",
+                    orientation: "portrait",
+                },
             })
             .from(el)
             .save();
@@ -58,14 +62,32 @@
         if (e.key === "Escape") onClose();
     }
 
+    let previewScale = 1;
+
+    function resizePreview() {
+        const availableWidth = window.innerWidth * 0.85;
+        const availableHeight = window.innerHeight * 0.85;
+
+        const a0WidthPx = 841 * 3.7795;
+        const a0HeightPx = 1189 * 3.7795;
+
+        previewScale = Math.min(
+            availableWidth / a0WidthPx,
+            availableHeight / a0HeightPx,
+        );
+    }
+
     onMount(() => {
         window.addEventListener("keydown", handleKey);
         document.body.style.overflow = "hidden";
+        resizePreview();
+        window.addEventListener("resize", resizePreview);
     });
 
     onDestroy(() => {
         window.removeEventListener("keydown", handleKey);
         document.body.style.overflow = "";
+        window.removeEventListener("resize", resizePreview);
     });
 </script>
 
@@ -79,54 +101,61 @@
             >
         </div>
 
-        <div id="book" class="book">
-            <!-- COVER -->
-            <section class="page cover">
-                <h1>{collection.title}</h1>
-                <p>{collection.description}</p>
-            </section>
+        <div class="preview">
+            <div
+                class="preview-scale"
+                style={`transform: scale(${previewScale})`}
+            >
+                <div id="book" class="book">
+                    <!-- COVER -->
+                    <section class="page cover">
+                        <h1>{collection.title}</h1>
+                        <p>{collection.description}</p>
+                    </section>
 
-            <!-- MAPPA + LEGENDA -->
-            <section class="page">
-                <!--                 
+                    <!-- MAPPA + LEGENDA -->
+                    <section class="page">
+                        <!--                 
                 <h2>Mappa della collezione</h2>
                 <PdfMap items={collection.items} /> -->
 
-                <p>Lista de destinos</p>
+                        <p>Lista de destinos</p>
 
-                <div class="legend">
-                    {#each collection.items as item, i}
-                        <div class="legend-item">
-                            <div class="legend-number">{i + 1}</div>
+                        <div class="legend">
+                            {#each collection.items as item, i}
+                                <div class="legend-item">
+                                    <div class="legend-number">{i + 1}</div>
 
-                            <div class="legend-text">
-                                <strong>
-                                    {item.customTitle || item.title}
-                                </strong>
-                            </div>
+                                    <div class="legend-text">
+                                        <strong>
+                                            {item.customTitle || item.title}
+                                        </strong>
+                                    </div>
+                                </div>
+                            {/each}
                         </div>
+                    </section>
+
+                    <!-- ITEMS -->
+                    {#each collection.items as item, i}
+                        <section class="page item">
+                            <div class="item-header">
+                                <div class="index">{i + 1}</div>
+                                <h3>{item.customTitle || item.title}</h3>
+                            </div>
+
+                            <p>{item.customDescription || item.description}</p>
+
+                            {#if item.media?.type === "image"}
+                                <img src={item.media.url} />
+                            {/if}
+
+                            <!-- mini mappa singolo punto -->
+                            <PdfMap items={[item]} />
+                        </section>
                     {/each}
                 </div>
-            </section>
-
-            <!-- ITEMS -->
-            {#each collection.items as item, i}
-                <section class="page item">
-                    <div class="item-header">
-                        <div class="index">{i + 1}</div>
-                        <h3>{item.customTitle || item.title}</h3>
-                    </div>
-
-                    <p>{item.customDescription || item.description}</p>
-
-                    {#if item.media?.type === "image"}
-                        <img src={item.media.url} />
-                    {/if}
-
-                    <!-- mini mappa singolo punto -->
-                    <PdfMap items={[item]} />
-                </section>
-            {/each}
+            </div>
         </div>
     </div>
 </div>
@@ -147,9 +176,26 @@
         width: 95%;
         height: 95%;
         background: #eaeaea;
-        overflow: auto;
+        overflow: hidden;
         border-radius: 12px;
         position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .preview {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 60px;
+    }
+
+    .preview-scale {
+        transform-origin: top center;
     }
 
     .close {
@@ -184,18 +230,35 @@
     }
 
     .book {
-        width: 210mm;
-        margin: auto;
+        width: 841mm;
+        height: 1189mm;
+
+        background: white;
+
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+
+        gap: 10mm;
+        padding: 20mm;
+
+        box-sizing: border-box;
     }
 
     .page {
-        page-break-after: always;
-        padding: 20mm;
+        padding: 8mm;
         background: white;
+        box-sizing: border-box;
+
+        break-inside: avoid;
     }
 
     .cover {
+        grid-column: 1 / -1;
         text-align: center;
+    }
+
+    .legend-page {
+        grid-column: 1 / -1;
     }
 
     .item-header {
@@ -218,9 +281,14 @@
         color: white;
     }
 
-    img {
+    .item img {
         width: 100%;
-        margin-top: 10px;
+        height: 120mm;
+        object-fit: cover;
+    }
+
+    .item :global(.map) {
+        height: 80mm;
     }
 
     /* LEGENDA */

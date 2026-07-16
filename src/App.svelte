@@ -28,7 +28,7 @@
   let lastScroll = 0;
 
   let activeCategory = null;
-  let sortOrder = "newest";
+  // let sortOrder = "newest";
 
   let newCollectionTitle = "";
   let activeCollectionId = null;
@@ -57,18 +57,33 @@
     ? archive.filter((i) => i.category === activeCategory)
     : archive;
 
+  /*   
   $: filteredArchive = [...categoryFilteredArchive].sort((a, b) => {
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
 
     return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-  });
+  }); */
+
+  $: filteredArchive = categoryFilteredArchive;
 
   function goBack() {
     activeCollectionId = null;
   }
 
   $: activeCategoryData = activeCategory ? categories[activeCategory] : null;
+
+  function shuffle(array) {
+    const arr = [...array];
+
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    return arr;
+  }
 
   function handleCreate() {
     if (!newCollectionTitle) return;
@@ -195,14 +210,71 @@
   }
 
   onMount(async () => {
-    archive = await fetchKobo();
+    archive = shuffle(await fetchKobo());
+
+    updateColumns();
+
+    window.addEventListener("resize", updateColumns);
 
     mainEl.addEventListener("scroll", handleScroll);
 
     return () => {
+      window.removeEventListener("resize", updateColumns);
       mainEl.removeEventListener("scroll", handleScroll);
     };
   });
+
+  function buildPages(items, columns, rowsPerPage = 8) {
+    const pageSize = columns * rowsPerPage;
+
+    const pages = [];
+
+    for (let i = 0; i < items.length; i += pageSize) {
+      pages.push(items.slice(i, i + pageSize));
+    }
+
+    if (pages.length <= 1) {
+      return pages;
+    }
+
+    const last = pages[pages.length - 1];
+    const prev = pages[pages.length - 2];
+
+    const remainder = last.length % columns;
+
+    if (remainder !== 0) {
+      const needed = columns - remainder;
+
+      for (let i = 0; i < needed; i++) {
+        if (prev.length > columns) {
+          last.unshift(prev.pop());
+        }
+      }
+    }
+
+    return pages;
+  }
+
+  $: pages = buildPages(filteredArchive, columns, 6);
+
+  $: totalPages = pages.length;
+
+  $: paginatedArchive = pages[currentPage - 1] || [];
+
+  $: start =
+    paginatedArchive.length === 0
+      ? 0
+      : filteredArchive.indexOf(paginatedArchive[0]) + 1;
+
+  $: end =
+    paginatedArchive.length === 0
+      ? 0
+      : filteredArchive.indexOf(paginatedArchive[paginatedArchive.length - 1]) +
+        1;
+
+  $: if (currentPage > totalPages) {
+    currentPage = 1;
+  }
 
   function handleScroll() {
     if (mainEl.scrollTop > 80) {
@@ -213,19 +285,62 @@
   }
 
   let currentPage = 1;
-  const pageSize = 30;
 
-  $: totalPages = Math.ceil(filteredArchive.length / pageSize);
+  let columns = 4;
 
-  $: paginatedArchive = filteredArchive.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  function updateColumns() {
+    const width = mainEl?.clientWidth || window.innerWidth;
 
-  $: start =
-    filteredArchive.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    if (width < 768) {
+      columns = 2;
+    } else if (width < 1200) {
+      columns = 3;
+    } else {
+      columns = 4;
+    }
+  }
 
-  $: end = Math.min(currentPage * pageSize, filteredArchive.length);
+  $: visiblePages = getVisiblePages(currentPage, totalPages);
+
+  function getVisiblePages(currentPage, totalPages) {
+    const pages = [];
+
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    pages.push(1);
+
+    if (currentPage > 4) {
+      pages.push("...");
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - 3) {
+      pages.push("...");
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  }
+
+  async function goToPage(page) {
+    currentPage = page;
+
+    await tick();
+
+    mainEl.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 </script>
 
 <!-- 
@@ -375,23 +490,32 @@
         </div>
       {/if}
       <div class="pages">
-        {#each Array(totalPages) as _, i}
-          <button
-            class:active={currentPage === i + 1}
-            on:click={async () => {
-              currentPage = i + 1;
+        <button
+          disabled={currentPage === 1}
+          on:click={() => goToPage(currentPage - 1)}
+        >
+          ← Anterior
+        </button>
 
-              await tick();
-
-              mainEl.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }}
-          >
-            {i + 1}
-          </button>
+        {#each visiblePages as page}
+          {#if page === "..."}
+            <span class="ellipsis">…</span>
+          {:else}
+            <button
+              class:active={currentPage === page}
+              on:click={() => goToPage(page)}
+            >
+              {page}
+            </button>
+          {/if}
         {/each}
+
+        <button
+          disabled={currentPage === totalPages}
+          on:click={() => goToPage(currentPage + 1)}
+        >
+          Siguiente →
+        </button>
       </div>
     {:else if collection}
       <!-- COLLECTION VIEW -->
@@ -833,7 +957,7 @@
     font-family: "alagard", monospace !important;
     font-optical-sizing: auto !important;
     font-style: italic !important;
-    color: var(--text);
+    color: rgb(203, 68, 62);
   }
 
   .volver {
@@ -856,8 +980,9 @@
     resize: none;
     color: var(--text) !important;
     background-color: #dadada;
-    border: 1px solid var(--text);
+    border: 1px dotted var(--text);
     border-radius: 6px;
+    padding: 6px;
   }
 
   .divider {
@@ -935,39 +1060,45 @@
   }
 
   .pages {
-    /* display: flex; */
+    display: flex;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    font-size: 0.85rem;
+    gap: 0.35rem;
+    margin: 2rem 0;
   }
+
   .pages button {
-    all: unset;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0.35rem 0.6rem;
     cursor: pointer;
-    padding: 0.2rem 0.4rem;
-    color: #888;
-    transition: color 0.2s ease;
-    font-family: "alagard";
-  }
-  .pages button:hover {
-    color: black;
-  }
-  .pages button.active {
     color: var(--text);
-    font-weight: 600;
-    position: relative;
+    font-family: "alagard";
+    transition: all 0.15s ease;
   }
-  .pages button.active::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 1px;
-    background: var(--text);
+
+  .pages button:hover:not(:disabled) {
+    border-color: rgb(203, 68, 62);
   }
+
+  .pages button.active {
+    background: rgb(203, 68, 62);
+    color: white;
+    border-color: rgb(203, 68, 62);
+    border-radius: 5px;
+  }
+
+  .pages button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .ellipsis {
+    padding: 0 0.25rem;
+    color: var(--text);
+  }
+
   .bottom-sheet {
     display: none;
   }

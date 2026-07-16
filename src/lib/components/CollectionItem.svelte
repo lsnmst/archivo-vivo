@@ -7,6 +7,9 @@
         moveItem,
     } from "../stores/collections.js";
 
+    import { getCategory } from "../utils/categories.js";
+    import { categoryColors } from "../utils/categoryColor.js";
+
     export let index;
     export let item;
     export let collectionId;
@@ -35,6 +38,8 @@
 
     $: koboTitle = item.title;
     $: koboDescription = item.description;
+    $: category = getCategory(item.category);
+    $: categoryColor = categoryColors[item.category] || "var(--text)";
 
     $: if (item) {
         tick().then(() => {
@@ -48,6 +53,12 @@
     <div class="header">
         <span class="index">{index + 1}</span>
     </div>
+
+    {#if item.category || category}
+        <div class="category-tag" style={`background:${categoryColor}`}>
+            {category?.label || item.category}
+        </div>
+    {/if}
 
     {#if item.media?.type === "image"}
         <img
@@ -72,7 +83,7 @@
         bind:this={descEl}
         class="colldescr"
         value={item.customDescription ?? ""}
-        placeholder={koboDescription || "Añade una descripción"}
+        placeholder={koboDescription || "Aquí puedes añadir una nota, una descripción o una historia sobre este lugar"}
         on:input={(e) => {
             updateDescription(e);
             autoResize(e.target);
@@ -99,13 +110,31 @@
 </div>
 
 <style>
+    .category-tag {
+        font-family: "alagard", monospace !important;
+        display: inline-block;
+        width: fit-content;
+        padding: 0.25rem 0.5rem;
+        margin-bottom: 0.35rem;
+
+        font-size: 0.6rem;
+        line-height: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+
+        color: var(--text);
+        border-radius: 5px;
+
+        font-weight: 500;
+    }
+
     img {
         -webkit-user-drag: none;
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
     }
-    
+
     .item {
         padding: 0.5rem;
         margin-bottom: 0.5rem;
@@ -144,21 +173,25 @@
         background: transparent;
         border: none;
         color: var(--text);
-        line-height: 0.85rem;
-        border: 1px solid var(--text);
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 0.8rem;
+        border: 1px dashed var(--text);
         border-radius: 6px;
+        padding: 2px;
     }
 
     .colldescr {
         font-family: "Source Code Pro", monospace !important;
         font-optical-sizing: auto !important;
         font-style: normal !important;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         background: transparent;
         border: none;
         color: var(--text);
-        border: 1px solid var(--text);
+        border: 1px dashed var(--text);
         border-radius: 6px;
+        padding: 2px;
     }
 
     .controls button {
@@ -170,7 +203,7 @@
         border: 1px solid var(--text);
     }
     .controls button:hover {
-        background-color: #fff;
+        background-color: #dadada;
         color: var(--text);
         border: 1px solid var(--text);
     }
