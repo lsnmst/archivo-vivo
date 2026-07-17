@@ -45,8 +45,8 @@
 
                 const el = document.createElement("div");
 
-                el.className = "marker";
-                el.innerText = i;
+                el.className = "markerrr";
+                el.innerText = i + 1;
 
                 new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
 
@@ -68,22 +68,22 @@
 <style>
     .map {
         width: 100%;
-        height: 320px;
-        border: 1px solid #ddd;
+        height: 500px;
     }
 
-    :global(.marker) {
+    :global(.markerrr) {
         width: 22px;
         height: 22px;
-        background: black;
-        color: black;
+        background: rgb(203, 68, 62);
+        color: #dadada;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 11px;
-        border: 2px solid white;
-        font-family: monospace;
+        font-size: 18px;
+        font-weight: 800;
+        border: 5px solid rgb(203, 68, 62);
+        font-family: "Source Code Pro", monospace !important;
     }
 
     :global(.mapboxgl-control-container) {

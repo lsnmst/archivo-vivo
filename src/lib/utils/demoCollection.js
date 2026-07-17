@@ -20,7 +20,7 @@ export const demoCollection = {
 
             media: {
                 type: "image",
-                url: normalizeMediaUrl("http://www.alessandromusetta.com/geo/tiles/cdmx/coll/test1.jpg")
+                url: normalizeMediaUrl("https://archivo-vivo-kobo.musetta-alessandro.workers.dev/api/media?url=https%3A%2F%2Fwww.alessandromusetta.com%2Fgeo%2Ftiles%2Fcdmx%2Fcoll%2Ftest1.jpg")
             }
         },
         {
@@ -35,7 +35,7 @@ export const demoCollection = {
 
             media: {
                 type: "image",
-                url: normalizeMediaUrl("http://www.alessandromusetta.com/geo/tiles/cdmx/coll/test2.jpg")
+                url: normalizeMediaUrl("https://archivo-vivo-kobo.musetta-alessandro.workers.dev/api/media?url=https%3A%2F%2Fwww.alessandromusetta.com%2Fgeo%2Ftiles%2Fcdmx%2Fcoll%2Ftest2.jpg")
             }
         }
     ],

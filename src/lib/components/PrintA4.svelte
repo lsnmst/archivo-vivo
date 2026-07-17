@@ -14,6 +14,7 @@
             scale: 2,
             useCORS: true,
             allowTaint: true,
+            imageTimeout: 15000,
         },
     });
 
@@ -50,7 +51,7 @@
                 html2canvas: { scale: 2, useCORS: true, allowTaint: true },
                 jsPDF: {
                     unit: "mm",
-                    format: "a0",
+                    format: [420, 1000],
                     orientation: "portrait",
                 },
             })
@@ -68,8 +69,8 @@
         const availableWidth = window.innerWidth * 0.85;
         const availableHeight = window.innerHeight * 0.85;
 
-        const a0WidthPx = 841 * 3.7795;
-        const a0HeightPx = 1189 * 3.7795;
+        const a0WidthPx = 420 * 3.7795;
+        const a0HeightPx = 1000 * 3.7795;
 
         previewScale = Math.min(
             availableWidth / a0WidthPx,
@@ -108,17 +109,13 @@
             >
                 <div id="book" class="book">
                     <!-- COVER -->
-                    <section class="page cover">
-                        <h1>{collection.title}</h1>
-                        <p>{collection.description}</p>
+                    <section class="intro">
+                        <h1 class="title">{collection.title}</h1>
+                        <p class="descr">{collection.description}</p>
                     </section>
 
                     <!-- MAPPA + LEGENDA -->
-                    <section class="page">
-                        <!--                 
-                <h2>Mappa della collezione</h2>
-                <PdfMap items={collection.items} /> -->
-
+                    <section class="page lista">
                         <p>Lista de destinos</p>
 
                         <div class="legend">
@@ -144,16 +141,27 @@
                                 <h3>{item.customTitle || item.title}</h3>
                             </div>
 
-                            <p>{item.customDescription || item.description}</p>
+                            <p
+                                class="item-descr"
+                                style="padding: 6px; margin-top: 2rem; margin-bottom:2rem"
+                            >
+                                {item.customDescription || item.description}
+                            </p>
 
                             {#if item.media?.type === "image"}
-                                <img src={item.media.url} />
+                                <img
+                                    src={item.media.url}
+                                    crossorigin="anonymous"
+                                />
                             {/if}
 
                             <!-- mini mappa singolo punto -->
-                            <PdfMap items={[item]} />
+                            <!-- <PdfMap items={[item]} /> -->
                         </section>
                     {/each}
+                    <div class="full-map">
+                        <PdfMap items={collection.items} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -230,16 +238,19 @@
     }
 
     .book {
-        width: 841mm;
-        height: 1189mm;
+        width: 420mm;
+        height: 1000mm;
 
         background: white;
 
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+        grid-auto-rows: minmax(120mm, auto);
 
-        gap: 10mm;
-        padding: 20mm;
+        align-content: start;
+
+        gap: 8mm;
+        padding: 12mm;
 
         box-sizing: border-box;
     }
@@ -248,8 +259,6 @@
         padding: 8mm;
         background: white;
         box-sizing: border-box;
-
-        break-inside: avoid;
     }
 
     .cover {
@@ -261,9 +270,40 @@
         grid-column: 1 / -1;
     }
 
+    .intro {
+        border: 1px solid rgb(203, 68, 62);
+        padding: 2rem;
+    }
+
+    .title {
+        font-size: 2.5rem;
+        line-height: 2.2rem;
+        font-family: "alagard", monospace !important;
+        font-optical-sizing: auto !important;
+        font-style: italic !important;
+        color: rgb(203, 68, 62);
+        padding: 10px;
+    }
+
+    .descr {
+        color: rgb(203, 68, 62);
+        font-family: "Source Code Pro", monospace !important;
+        font-optical-sizing: auto !important;
+        font-size: 0.8rem;
+        line-height: 0.9rem;
+    }
+
+    .lista {
+        /* border: 1px solid var(--text); */
+        padding: 2rem;
+        font-family: "alagard", monospace !important;
+        font-optical-sizing: auto !important;
+    }
+
     .item-header {
         display: flex;
         align-items: center;
+        font-family: "alagard", monospace !important;
         gap: 10px;
     }
 
@@ -281,14 +321,28 @@
         color: white;
     }
 
+    .item {
+        height: 250mm;
+        overflow: hidden;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item-descr {
+        font-size: 0.8rem;
+        line-height: 0.9rem;
+    }
+
     .item img {
         width: 100%;
-        height: 120mm;
+        aspect-ratio: 3 / 4;
+        height: auto;
         object-fit: cover;
     }
 
     .item :global(.map) {
-        height: 80mm;
+        height: 50mm;
     }
 
     /* LEGENDA */
@@ -335,5 +389,11 @@
         color: var(--text);
         font-style: italic;
         font-weight: 200;
+    }
+
+    .full-map {
+        grid-column: 1 / -1;
+        height: 300mm;
+        margin-top: 50mm;
     }
 </style>
