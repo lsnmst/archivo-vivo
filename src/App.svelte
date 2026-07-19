@@ -371,7 +371,7 @@
 
       <div class="presentation" class:compact={presentationCompact}>
         <p
-          style="font-size:0.95em; padding: 1rem; line-height: 1.4em; font-weight: 300;"
+          style="font-size:0.9em; padding: 1rem; line-height: 1.25em; font-weight: 500;"
         >
           Fotografiar lo cotidiano me abrió una ventana para mirar la ciudad de
           otra manera. Aquello que pisamos o vemos a diario esconde una
@@ -866,8 +866,10 @@
     font-weight: 200;
     line-height: 1.05rem;
     padding: 0.35rem;
-    background-color: var(--text);
-    color: #f2f3f7;
+    background-color: none;
+    color: var(--text);
+    border-top: 1px dotted var(--text);
+    border-bottom: 1px dotted var(--text);
 
     opacity: 1;
     transform: translateY(0);
