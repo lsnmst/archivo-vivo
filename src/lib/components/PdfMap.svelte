@@ -75,7 +75,7 @@
         width: 22px;
         height: 22px;
         background: rgb(203, 68, 62);
-        color: #dadada;
+        color: #eee4e4;
         border-radius: 50%;
         display: flex;
         align-items: center;

@@ -367,8 +367,14 @@
   <section class="main" bind:this={mainEl}>
     {#if !activeCollectionId}
       <!-- ARCHIVE VIEW -->
-      <h2>CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
+      <h2 style="font-size: 1.1rem;border-bottom: 1px dotted var(--text);border-top: 1px dotted var(--text);">CARTOGRAFÍA DE LA COTIDIANIDAD</h2>
+      <p
+        style="font-size: 0.7rem !important;font-style: italic;"
+      >
+        de Armando Meravilla
+      </p>
 
+      <!--       
       <div class="presentation" class:compact={presentationCompact}>
         <p
           style="font-size:0.9em; padding: 1rem; line-height: 1.25em; font-weight: 500;"
@@ -389,6 +395,7 @@
           y jamás cabrán en un solo lugar.
         </p>
       </div>
+      -->
 
       <div class="filters">
         <button
@@ -543,7 +550,7 @@
             </button>
           {/if}
           <button
-            class="print-btn"
+            class="export-btn"
             on:click={() => exportCollection(collection)}
           >
             ↓ Exportar
@@ -617,9 +624,9 @@
       </div>
     {:else}
       <!-- SAFETY STATE -->
-      <p>Caricamento collezione...</p>
+      <p>Cargando la colección...</p>
     {/if}
-    <div class="presentation" style="background-color: #dadada !important;">
+    <div class="presentation" style="background-color: #eee4e4 !important;">
       <p
         style="font-size:1em; padding: 1.1rem; line-height: 1.3em; font-weight: 500; color:var(--text); font-family: 'alagard'"
       >
@@ -664,6 +671,27 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
+    <div class="presentation" class:compact={presentationCompact}>
+      <p
+        style="font-size:0.9em; padding: 1rem; line-height: 1.25em; font-weight: 500;"
+      >
+        Fotografiar lo cotidiano me abrió una ventana para mirar la ciudad de
+        otra manera. Aquello que pisamos o vemos a diario esconde una historia,
+        un autor y un contexto cultural, político y artístico. Aunque la Ciudad
+        de México es un monstruo caótico, al recorrer sus colonias emergen
+        detalles que le otorgan identidad y nos permiten leer el paso del
+        tiempo. Esta selección es una pequeña muestra de esos gestos sencillos
+        pero excepcionales que habitan las calles. Al estar ligada a mis
+        recorridos habituales, sé que cada imagen relata también un fragmento de
+        mi propia historia y mi forma de ver la vida. Este mapa interactivo nace
+        para ayudarte a descubrir rincones invisibles, inspirar nuevos
+        proyectos, motivarte a caminar tu barrio o reconectar con tus propias
+        memorias. Esto es un "archivo vivo": un proyecto en constante
+        movimiento, porque los encuadres de esta urbe son infinitos y jamás
+        cabrán en un solo lugar.
+      </p>
+    </div>
+
     {#if activeCategoryData}
       <div
         class="category-info"
@@ -725,6 +753,10 @@
     resize: none; /* importantissimo */
   }
 
+  input {
+    background-color: #eee4e4 !important;
+  }
+
   .layout {
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -738,7 +770,7 @@
     font-family: "Source Code Pro", monospace !important;
     font-optical-sizing: auto !important;
     font-style: normal !important;
-    background: #dadada;
+    background: #eee4e4;
     overflow-y: auto;
     height: 100%;
   }
@@ -753,7 +785,7 @@
     padding: 1rem;
     height: 100%;
     overflow: auto;
-    background-color: #dadada;
+    background-color: #eee4e4;
   }
 
   .sidebar h2 {
@@ -768,7 +800,7 @@
 
   .collection-header {
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: 1rem;
     margin-bottom: 1rem;
   }
@@ -814,24 +846,24 @@
 
   .collection.demo {
     background: var(--text);
-    color: #f2f3f7;
+    color: #eee4e4;
   }
   .collection.demo:hover {
     background: rgb(203, 68, 62);
-    color: #f2f3f7;
+    color: #eee4e4;
     border-color: var(--text);
   }
 
   .collection.active {
     background: rgb(203, 68, 62);
-    color: white;
+    color: #eee4e4;
   }
 
   .delete-btn {
     cursor: pointer;
     font-family: "Source Code Pro", monospace !important;
     font-style: italic !important;
-    color: #f2f3f7;
+    color: #eee4e4;
     font-size: 0.65rem;
     line-height: 0.85rem;
     background-color: var(--text);
@@ -851,7 +883,7 @@
   }
 
   .modal {
-    background: #f2f3f7;
+    background: #eee4e4;
     padding: 1.2rem;
     border-radius: 6px;
     width: 320px;
@@ -862,13 +894,13 @@
 
   .presentation {
     min-height: 20px;
+    font-family: "Source Code Pro", monospace !important;
     font-size: 0.7rem;
     font-weight: 200;
     line-height: 1.05rem;
     padding: 0.35rem;
     background-color: none;
     color: var(--text);
-    border-top: 1px dotted var(--text);
     border-bottom: 1px dotted var(--text);
 
     opacity: 1;
@@ -878,7 +910,6 @@
       opacity 0.25s ease,
       transform 0.35s ease;
 
-    max-height: 400px;
     overflow: hidden;
   }
 
@@ -931,7 +962,7 @@
     border-radius: 6px;
     cursor: pointer;
     color: var(--text);
-    background: #f2f3f7;
+    background: #eee4e4;
     font-family: "Source Code Pro", monospace !important;
     font-optical-sizing: auto !important;
     font-style: italic !important;
@@ -966,7 +997,7 @@
     font-family: "Source Code Pro", monospace !important;
     font-optical-sizing: auto !important;
     font-style: italic !important;
-    color: #f2f3f7;
+    color: #eee4e4;
     font-size: 0.65rem;
     line-height: 0.85rem;
     background-color: var(--text);
@@ -981,7 +1012,7 @@
     outline: none;
     resize: none;
     color: var(--text) !important;
-    background-color: #dadada;
+    background-color: #eee4e4;
     border: 1px dotted var(--text);
     border-radius: 6px;
     padding: 6px;
@@ -1014,7 +1045,7 @@
 
   .create-btn {
     background: var(--text);
-    color: #f2f3f7;
+    color: #eee4e4;
     border-color: var(--text);
     padding: 0.5rem;
     border-radius: 6px;
@@ -1025,7 +1056,9 @@
   }
 
   .import-btn {
-    background: #dadada;
+    display: none;
+
+    background: #eee4e4;
     color: var(--text);
     border: none;
     padding: 0.5rem;
@@ -1045,7 +1078,25 @@
     font-family: "Source Code Pro", monospace !important;
     font-optical-sizing: auto !important;
     font-style: italic !important;
-    color: #f2f3f7;
+    color: #eee4e4;
+    font-size: 0.65rem;
+    line-height: 0.85rem;
+    background-color: var(--text);
+    border-color: var(--text);
+    font-weight: 200;
+    margin: 0.1rem;
+  }
+
+  .export-btn {
+    display: none;
+
+    position: relative;
+    z-index: 9999;
+    cursor: pointer;
+    font-family: "Source Code Pro", monospace !important;
+    font-optical-sizing: auto !important;
+    font-style: italic !important;
+    color: #eee4e4;
     font-size: 0.65rem;
     line-height: 0.85rem;
     background-color: var(--text);
@@ -1118,7 +1169,7 @@
     z-index: 9999;
     border: 1px solid var(--text);
     background: var(--text);
-    color: white;
+    color: #eee4e4;
     padding: 0.7rem 1rem;
     border-radius: 999px;
     font-family: "Source Code Pro", monospace;
@@ -1187,7 +1238,7 @@
   }
 
   .filters button.active {
-    color: var(--text);
+    color: #eee4e4;
     opacity: 1;
   }
 
@@ -1285,7 +1336,7 @@
     .mobile-tabs button {
       flex: 1;
       border: 1px solid var(--text);
-      background: #dadada;
+      background: #eee4e4;
       padding: 0.5rem;
       font-family: inherit;
       color: var(--text);

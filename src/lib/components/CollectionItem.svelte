@@ -203,7 +203,7 @@
         border: 1px solid var(--text);
     }
     .controls button:hover {
-        background-color: #dadada;
+        background-color: #eee4e4;
         color: var(--text);
         border: 1px solid var(--text);
     }

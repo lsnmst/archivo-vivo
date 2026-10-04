@@ -196,6 +196,7 @@
         background-color: rgb(86, 93, 190);
         border: none;
         border-radius: 5px;
+        color: #eee4e4;
     }
     .addColl:hover {
         background-color: rgb(203, 68, 62);

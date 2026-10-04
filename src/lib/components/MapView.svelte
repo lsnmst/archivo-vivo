@@ -116,15 +116,15 @@
     :global(.custom-marker-view .marker) {
         width: 28px;
         height: 28px;
-        background:rgb(203, 68, 62);
-        color: #dadada;
+        background:#eee4e4;
+        color: rgb(203, 68, 62);
         border-radius: 20%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
-        border: 1px solid rgb(203, 68, 62);
+        border: 2px solid rgb(0, 0, 0);
         font-family: "Source Code Pro", monospace;
     }
 
