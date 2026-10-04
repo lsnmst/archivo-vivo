@@ -371,7 +371,7 @@
       <p
         style="font-size: 0.7rem !important;font-style: italic;"
       >
-        de Armando Meravilla
+        de Armando Maravilla
       </p>
 
       <!--       
